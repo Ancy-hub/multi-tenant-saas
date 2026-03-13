@@ -1,0 +1,12 @@
+$kind: http-request
+name: CreateOrganizations
+url: http://localhost:8081/organizations
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"name\":\"shwab-connect\"\r
+
+    }"
+order: 4011244714497747
