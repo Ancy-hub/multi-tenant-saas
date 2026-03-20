@@ -1,5 +1,5 @@
 $kind: http-request
-name: CreateOrganizations
+name: CreateAllOrganizations
 url: http://localhost:8081/organizations
 method: POST
 body:

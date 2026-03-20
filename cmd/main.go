@@ -23,34 +23,31 @@ func main() {
 	defer database.Close()
 	log.Println("Database connected")
 
-	//Initialize repository
-	orgRepo:= repository.NewOrganizationRepository(database)
-
-	//Initialize service
-	orgService:= services.NewOrganizationService(orgRepo)
-
-	//Initialize handler
-	orgHandler:= handlers.NewOrganizationHandler(orgService)
-
-	//Router
-	r := chi.NewRouter()
-
-	//Health check
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+	
+	orgRepo:= repository.NewOrganizationRepository(database)//Initialize repository
+	orgService:= services.NewOrganizationService(orgRepo)//Initialize service
+	orgHandler:= handlers.NewOrganizationHandler(orgService)//Initialize handler
+	
+	userRepo:=repository.NewUserRepository(database)
+	userService:=services.NewUserService(userRepo)
+	userHandler:=handlers.NewUserHandler(userService)
+	
+	r := chi.NewRouter()//Router
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {//Health check
 		w.Write([]byte("OK"))
 	})
 
 	//Organization routes
 	r.Post("/organizations",orgHandler.CreateOrganization)
-
 	r.Get("/organizations",orgHandler.GetOrganizations)
-
 	r.Get("/organizations/{id}",orgHandler.GetOrganizationByID)
-
 	r.Patch("/organizations/{id}", orgHandler.UpdateOrganization)
+	//User routes
+	r.Post("/users",userHandler.CreateUser)
+	r.Get("/users",userHandler.GetAllUsers)
+	r.Get("/users/{id}",userHandler.GetUserByID)
 	
 	log.Println("Server running on port", cfg.Port)
-
 	err= http.ListenAndServe(":"+cfg.Port, r)
 	if err != nil {
 		log.Fatal(err)
