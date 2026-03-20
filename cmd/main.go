@@ -31,6 +31,10 @@ func main() {
 	userRepo:=repository.NewUserRepository(database)
 	userService:=services.NewUserService(userRepo)
 	userHandler:=handlers.NewUserHandler(userService)
+
+	membershipRepo := repository.NewMembershipRepository(database)
+	membershipService := services.NewMembershipService(membershipRepo)
+	membershipHandler := handlers.NewMembershipHandler(membershipService)
 	
 	r := chi.NewRouter()//Router
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {//Health check
@@ -46,6 +50,8 @@ func main() {
 	r.Post("/users",userHandler.CreateUser)
 	r.Get("/users",userHandler.GetAllUsers)
 	r.Get("/users/{id}",userHandler.GetUserByID)
+
+	r.Post("/organizations/{id}/members", membershipHandler.AddUser)
 	
 	log.Println("Server running on port", cfg.Port)
 	err= http.ListenAndServe(":"+cfg.Port, r)
