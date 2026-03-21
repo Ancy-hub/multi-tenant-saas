@@ -17,7 +17,7 @@ func NewOrganizationService(repo *repository.OrganizationRepository) *Organizati
 
 func (s *OrganizationService) CreateOrganization(ctx context.Context, name string)error{
 	org:=models.Organization{
-		ID: uuid.New().String(),
+		ID: uuid.New(),
 		Name: name,
 	}
 

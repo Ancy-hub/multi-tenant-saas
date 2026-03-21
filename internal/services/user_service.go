@@ -23,7 +23,7 @@ func (s *UserService) CreateUser(ctx context.Context, name,password, email strin
 		return err
 	}
 	user := models.User{
-		ID: uuid.New().String(),
+		ID: uuid.New(),
 		Name: name,
 		Email: email,
 		PasswordHash: string(hashedPassword),

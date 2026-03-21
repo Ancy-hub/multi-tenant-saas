@@ -1,9 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Organization struct{
-	ID string
+	ID uuid.UUID
 	Name string
 	CreatedAt time.Time
 	CreatedBy string

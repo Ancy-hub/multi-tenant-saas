@@ -1,0 +1,16 @@
+$kind: http-request
+name: AdduserToOrg
+url: "
+  http://localhost:8081/organizations/bed60989-a54e-4886-b190-802576478efc/memb\
+  ers"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"user_id\": \"508b6d2f-6bab-4da8-855e-3af2cd36b64c\",\r
+
+    \  \"role\": \"admin\"\r
+
+    }"
+order: 4503571950274373

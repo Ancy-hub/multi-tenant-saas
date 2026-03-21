@@ -52,6 +52,10 @@ func main() {
 	r.Get("/users/{id}",userHandler.GetUserByID)
 
 	r.Post("/organizations/{id}/members", membershipHandler.AddUser)
+	r.Get("/organizations/{id}/members", membershipHandler.GetMembersByOrg)
+	r.Delete("/organizations/{org_id}/members/{user_id}", membershipHandler.RemoveMember)
+	r.Patch("/organizations/{org_id}/members/{user_id}", membershipHandler.UpdateRole)
+	r.Get("/users/{id}/organizations", membershipHandler.GetUserOrgs)
 	
 	log.Println("Server running on port", cfg.Port)
 	err= http.ListenAndServe(":"+cfg.Port, r)
