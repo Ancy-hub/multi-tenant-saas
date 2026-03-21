@@ -18,36 +18,144 @@ func NewMembershipHandler(service *services.MembershipService) *MembershipHandle
 	return &MembershipHandler{service: service}
 }
 
-func (h *MembershipHandler) AddUser(w http.ResponseWriter, r *http.Request){
-	orgID:= chi.URLParam(r,"id")
+func (h *MembershipHandler) AddUser(w http.ResponseWriter, r *http.Request) {
+	orgIDParam := chi.URLParam(r, "id")
+
+	orgID, err := uuid.Parse(orgIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid org_id")
+		return
+	}
+
 	var req struct {
 		UserID string `json:"user_id"`
 		Role   string `json:"role"`
 	}
 
-	err:=json.NewDecoder(r.Body).Decode(&req)
-	if err!=nil{
-		utils.WriteError(w,http.StatusBadRequest,"Invalid request")
-	}
-
-	if req.UserID==""|| req.Role==""{
-		utils.WriteError(w,http.StatusBadRequest,"Missing fields")
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
-	_, err = uuid.Parse(req.UserID)
+	if req.UserID == "" || req.Role == "" {
+		utils.WriteError(w, http.StatusBadRequest, "Missing fields")
+		return
+	}
+
+	userID, err := uuid.Parse(req.UserID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, "Invalid user_id format")
 		return
 	}
-	
-	err=h.service.AddUserToOrg(r.Context(),req.UserID,orgID,req.Role)
-	if err!=nil{
-		utils.WriteError(w,http.StatusBadRequest,err.Error())
+
+	err = h.service.AddUserToOrg(r.Context(), userID, orgID, req.Role)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	utils.WriteJSON(w,http.StatusCreated,map[string]string{
-		"message":"user added to org",
+	utils.WriteJSON(w, http.StatusCreated, map[string]string{
+		"message": "user added to org",
 	})
+}
+
+func (h *MembershipHandler) GetMembersByOrg(w http.ResponseWriter, r *http.Request) {
+	orgIDParam := chi.URLParam(r, "id")
+
+	orgID, err := uuid.Parse(orgIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid org_id")
+		return
+	}
+
+	members, err := h.service.GetMembersByOrg(r.Context(), orgID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, members)
+}
+
+func (h *MembershipHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
+	orgIDParam := chi.URLParam(r, "org_id")
+	userIDParam := chi.URLParam(r, "user_id")
+
+	orgID, err := uuid.Parse(orgIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid org_id")
+		return
+	}
+
+	userID, err := uuid.Parse(userIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid user_id")
+		return
+	}
+
+	err = h.service.RemoveMember(r.Context(), userID, orgID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{
+		"message": "member removed",
+	})
+}
+
+func (h *MembershipHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
+	orgIDParam := chi.URLParam(r, "org_id")
+	userIDParam := chi.URLParam(r, "user_id")
+
+	orgID, err := uuid.Parse(orgIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid org_id")
+		return
+	}
+
+	userID, err := uuid.Parse(userIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid user_id")
+		return
+	}
+
+	var req struct {
+		Role string `json:"role"`
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil || req.Role == "" {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid role")
+		return
+	}
+
+	err = h.service.UpdateRole(r.Context(), userID, orgID, req.Role)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{
+		"message": "role updated",
+	})
+}
+
+func (h *MembershipHandler) GetUserOrgs(w http.ResponseWriter, r *http.Request) {
+	userIDParam := chi.URLParam(r, "id")
+
+	userID, err := uuid.Parse(userIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid user_id")
+		return
+	}
+
+	orgs, err := h.service.GetUserOrgs(r.Context(), userID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, orgs)
 }
