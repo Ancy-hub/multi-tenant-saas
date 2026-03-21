@@ -33,9 +33,9 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.CreateUser(r.Context(), req.Name, req.Email, req.Password)
+	err = h.service.CreateUser(r.Context(), req.Name, req.Password, req.Email)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, "Failed to create user")
+		utils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -62,11 +62,11 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, user)
 }
 
-func ( h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
-	users,err:=h.service.GetAllUsers(r.Context())
-	if err !=nil{
-		utils.WriteError(w,http.StatusNotFound,"Failed to fetch users")
+func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.service.GetAllUsers(r.Context())
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, "Failed to fetch users")
 	}
 
-	utils.WriteJSON(w,http.StatusOK,users)
+	utils.WriteJSON(w, http.StatusOK, users)
 }
