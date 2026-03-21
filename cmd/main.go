@@ -9,13 +9,14 @@ import (
 	"github.com/ancy-shibu/multi-tenant-saas/internal/handlers"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/repository"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/services"
+	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	//Load config
 	cfg:=config.Load()
-
+	utils.SetJWTSecret(cfg.JWTSecret)
 	database,err:=db.NewDB();
 	if err!=nil{
 		log.Fatal("Failed to connect to db:",err)
@@ -40,7 +41,9 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {//Health check
 		w.Write([]byte("OK"))
 	})
-
+	
+	r.Post("/login", userHandler.Login)
+	
 	//Organization routes
 	r.Post("/organizations",orgHandler.CreateOrganization)
 	r.Get("/organizations",orgHandler.GetOrganizations)
@@ -56,7 +59,7 @@ func main() {
 	r.Delete("/organizations/{org_id}/members/{user_id}", membershipHandler.RemoveMember)
 	r.Patch("/organizations/{org_id}/members/{user_id}", membershipHandler.UpdateRole)
 	r.Get("/users/{id}/organizations", membershipHandler.GetUserOrgs)
-	
+
 	log.Println("Server running on port", cfg.Port)
 	err= http.ListenAndServe(":"+cfg.Port, r)
 	if err != nil {

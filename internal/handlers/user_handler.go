@@ -70,3 +70,26 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, http.StatusOK, users)
 }
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil || req.Email == "" || req.Password == "" {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	token, err := h.service.Login(r.Context(), req.Email, req.Password)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, "Invalid credentials")
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{
+		"token": token,
+	})
+}

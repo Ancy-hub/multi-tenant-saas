@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ancy-shibu/multi-tenant-saas/internal/models"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/repository"
+	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )	
@@ -37,4 +39,20 @@ func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User,
 
 func (s *UserService) GetAllUsers(ctx context.Context)([]models.User,error){
 	return s.repo.GetAll(ctx)
+}
+
+func( s *UserService) Login(ctx context.Context, email, password string)(string,error){
+	user,err:=s.repo.GetByEmail(ctx,email)
+	if err!=nil{
+		return "",err
+	}
+	err= bcrypt.CompareHashAndPassword([]byte(user.PasswordHash),[]byte(password))
+	if err !=nil{
+		return "",errors.New("invalid credentials")
+	}
+	token,err:=utils.GenerateToken(user.ID)
+	if err!=nil{
+		return "",err
+	}
+	return token,nil
 }
