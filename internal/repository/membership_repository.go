@@ -124,3 +124,20 @@ func (r *MembershipRepository) GetOrgsByUser(ctx context.Context, userID uuid.UU
 
 	return orgs, nil
 }
+
+func (r *MembershipRepository) GetUserRole(ctx context.Context, userID, orgID uuid.UUID) (string, error) {
+	query := `
+	SELECT role
+	FROM memberships
+	WHERE user_id = $1 AND org_id = $2
+	`
+
+	var role string
+
+	err := r.DB.QueryRow(ctx, query, userID, orgID).Scan(&role)
+	if err != nil {
+		return "", err
+	}
+
+	return role, nil
+}

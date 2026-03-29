@@ -57,3 +57,7 @@ func (s *MembershipService) GetUserOrgs(ctx context.Context, userID uuid.UUID) (
 
 	return s.repo.GetOrgsByUser(ctx, userID)
 }
+
+func ( s *MembershipService) GetUserRole(ctx context.Context, userID uuid.UUID, orgID uuid.UUID)(string, error){
+	return s.repo.GetUserRole(ctx,userID,orgID)
+}
