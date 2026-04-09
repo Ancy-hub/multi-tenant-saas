@@ -8,15 +8,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// NewDB creates a new PostgreSQL database connection pool.
 func NewDB() (*pgxpool.Pool, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		return nil, errors.New("DATABASE_URL not set")
 	}
-	dbpool,err:=pgxpool.New(context.Background(), databaseURL)
-	if err!=nil{
-		return nil,err
+	dbpool, err := pgxpool.New(context.Background(), databaseURL)
+	if err != nil {
+		return nil, err
 	}
 
-	return dbpool,nil
+	return dbpool, nil
 }

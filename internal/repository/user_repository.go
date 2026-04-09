@@ -7,71 +7,78 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// UserRepository handles database operations for users.
 type UserRepository struct {
+	// DB is the database connection pool.
 	DB *pgxpool.Pool
 }
 
-func NewUserRepository(db *pgxpool.Pool) *UserRepository{
+// NewUserRepository creates a new UserRepository instance.
+func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{DB: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user models.User)error{
-	query:=`
+// Create inserts a new user into the database.
+func (r *UserRepository) Create(ctx context.Context, user models.User) error {
+	query := `
 	INSERT INTO users(id,email,password_hash,name)
 	VALUES ($1,$2,$3,$4)
 	`
-	 _,err:=r.DB.Exec(ctx,query,user.ID,user.Email, user.PasswordHash, user.Name)
-	 return err
+	_, err := r.DB.Exec(ctx, query, user.ID, user.Email, user.PasswordHash, user.Name)
+	return err
 }
 
-func (r *UserRepository) GetById(ctx context.Context, id string)(*models.User,error){
-	query:=`
+// GetById retrieves a user by their ID.
+func (r *UserRepository) GetById(ctx context.Context, id string) (*models.User, error) {
+	query := `
 	SELECT id, name, email, created_at
 	From users
 	Where id=$1
 	`
 	var user models.User
-	err:=r.DB.QueryRow(ctx,query,id).Scan(
+	err := r.DB.QueryRow(ctx, query, id).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Email,
 		&user.CreatedAt,
 	)
-	if err!=nil{
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
-	return &user,err
+	return &user, err
 }
 
-func ( r *UserRepository) GetAll(ctx context.Context)([] models.User,error){
-	query:=`
+// GetAll retrieves all users from the database.
+func (r *UserRepository) GetAll(ctx context.Context) ([]models.User, error) {
+	query := `
 	SELECT id, name, email, created_at
 	FROM users
 	ORDER by created_at desc
 	`
-	rows,err:=r.DB.Query(ctx,query)
-	if err!= nil{
-		return nil,err
+	rows, err := r.DB.Query(ctx, query)
+	if err != nil {
+		return nil, err
 	}
 	defer rows.Close()
 	var users []models.User
-	for rows.Next(){
+	for rows.Next() {
 		var user models.User
-		err:=rows.Scan(
+		err := rows.Scan(
 			&user.ID,
 			&user.Name,
 			&user.Email,
 			&user.CreatedAt,
 		)
-		if err!=nil{
-			return nil,err
+		if err != nil {
+			return nil, err
 		}
 
 		users = append(users, user)
 	}
-	return users,nil
+	return users, nil
 }
 
+// GetByEmail retrieves a user by their email address.
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (models.User, error) {
 	query := `
 	SELECT id, name, email, password_hash

@@ -9,15 +9,18 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// OrganizationHandler handles HTTP requests related to organizations.
 type OrganizationHandler struct {
+	// service is the organization service instance.
 	service *services.OrganizationService
 }
 
+// NewOrganizationHandler creates a new OrganizationHandler instance.
 func NewOrganizationHandler(service *services.OrganizationService) *OrganizationHandler {
 	return &OrganizationHandler{service: service}
 }
 
-// POST /organizations
+// CreateOrganization handles POST /organizations - creates a new organization.
 func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Name string `json:"name"`
@@ -40,7 +43,7 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 	})
 }
 
-// GET /organizations
+// GetOrganizations handles GET /organizations - retrieves all organizations.
 func (h *OrganizationHandler) GetOrganizations(w http.ResponseWriter, r *http.Request) {
 	orgs, err := h.service.GetOrganizations(r.Context())
 	if err != nil {
@@ -51,7 +54,7 @@ func (h *OrganizationHandler) GetOrganizations(w http.ResponseWriter, r *http.Re
 	utils.WriteSuccess(w, http.StatusOK, orgs)
 }
 
-// GET /organizations/{id}
+// GetOrganizationByID handles GET /organizations/{id} - retrieves an organization by ID.
 func (h *OrganizationHandler) GetOrganizationByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -69,7 +72,7 @@ func (h *OrganizationHandler) GetOrganizationByID(w http.ResponseWriter, r *http
 	utils.WriteSuccess(w, http.StatusOK, org)
 }
 
-// PUT /organizations/{id}
+// UpdateOrganization handles PATCH /organizations/{id} - updates an organization.
 func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 

@@ -9,50 +9,57 @@ import (
 	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-)	
+)
 
-type UserService struct{
+// UserService provides business logic for user operations.
+type UserService struct {
+	// repo is the user repository instance.
 	repo *repository.UserRepository
 }
 
-func NewUserService (repo *repository.UserRepository) *UserService{
-	return &UserService{repo:repo}
+// NewUserService creates a new UserService instance.
+func NewUserService(repo *repository.UserRepository) *UserService {
+	return &UserService{repo: repo}
 }
 
-func (s *UserService) CreateUser(ctx context.Context, name,password, email string) error{
-	hashedPassword,err:=bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err!=nil{
+// CreateUser creates a new user with hashed password.
+func (s *UserService) CreateUser(ctx context.Context, name, password, email string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
 		return err
 	}
 	user := models.User{
-		ID: uuid.New(),
-		Name: name,
-		Email: email,
+		ID:           uuid.New(),
+		Name:         name,
+		Email:        email,
 		PasswordHash: string(hashedPassword),
 	}
-	return s.repo.Create(ctx,user)
+	return s.repo.Create(ctx, user)
 }
 
-func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User,error){
-	return s.repo.GetById(ctx,id)
+// GetUserByID retrieves a user by their ID.
+func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
+	return s.repo.GetById(ctx, id)
 }
 
-func (s *UserService) GetAllUsers(ctx context.Context)([]models.User,error){
+// GetAllUsers retrieves all users.
+func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func( s *UserService) Login(ctx context.Context, email, password string)(string,error){
-	user,err:=s.repo.GetByEmail(ctx,email)
-	if err!=nil{
-		return "",err
+// Login authenticates a user and returns a JWT token.
+func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {
+	user, err := s.repo.GetByEmail(ctx, email)
+	if err != nil {
+		return "", err
 	}
-	err= bcrypt.CompareHashAndPassword([]byte(user.PasswordHash),[]byte(password))
-	if err !=nil{
-		return "",errors.New("invalid credentials")
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		return "", errors.New("invalid credentials")
 	}
-	token,err:=utils.GenerateToken(user.ID)
-	if err!=nil{
-		return "",err
+	token, err := utils.GenerateToken(user.ID)
+	if err != nil {
+		return "", err
 	}
-	return token,nil
+	return token, nil
 }

@@ -8,10 +8,13 @@ import (
 	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
 )
 
+// contextKey is the type for context keys.
 type contextKey string
 
+// UserIDKey is the context key for storing user ID.
 const UserIDKey contextKey = "user_id"
 
+// AuthMiddleware validates JWT tokens and attaches user ID to request context.
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")

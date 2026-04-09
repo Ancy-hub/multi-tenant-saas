@@ -1,15 +1,22 @@
 package config
 
-import(
-	"github.com/joho/godotenv"
+import (
 	"os"
+
+	"github.com/joho/godotenv"
 )
+
+// Config holds the application configuration settings.
 type Config struct {
+	// DatabaseURL is the URL for the database connection.
 	DatabaseURL string
-	Port        string
-	JWTSecret   string
+	// Port is the port on which the server will run.
+	Port string
+	// JWTSecret is the secret key used for JWT token signing.
+	JWTSecret string
 }
 
+// Load loads the configuration from environment variables.
 func Load() Config {
 	godotenv.Load()
 

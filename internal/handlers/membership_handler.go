@@ -11,14 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// MembershipHandler handles HTTP requests related to organization memberships.
 type MembershipHandler struct {
 	service *services.MembershipService
 }
 
+// NewMembershipHandler creates a new MembershipHandler instance.
 func NewMembershipHandler(service *services.MembershipService) *MembershipHandler {
 	return &MembershipHandler{service: service}
 }
 
+// AddUser handles POST /organizations/{id}/members - adds a user to an organization.
 func (h *MembershipHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	orgIDParam := chi.URLParam(r, "id")
 
@@ -61,6 +64,7 @@ func (h *MembershipHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetMembersByOrg handles GET /organizations/{id}/members - retrieves members of an organization.
 func (h *MembershipHandler) GetMembersByOrg(w http.ResponseWriter, r *http.Request) {
 	orgIDParam := chi.URLParam(r, "id")
 
@@ -97,6 +101,7 @@ func (h *MembershipHandler) GetMembersByOrg(w http.ResponseWriter, r *http.Reque
 	utils.WriteSuccess(w, http.StatusOK, members)
 }
 
+// RemoveMember handles DELETE /organizations/{org_id}/members/{user_id} - removes a member from an organization.
 func (h *MembershipHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	orgIDParam := chi.URLParam(r, "org_id")
 	userIDParam := chi.URLParam(r, "user_id")
@@ -124,6 +129,7 @@ func (h *MembershipHandler) RemoveMember(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+// UpdateRole handles PATCH /organizations/{org_id}/members/{user_id} - updates a member's role.
 func (h *MembershipHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	orgIDParam := chi.URLParam(r, "org_id")
 	userIDParam := chi.URLParam(r, "user_id")
@@ -161,6 +167,7 @@ func (h *MembershipHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetUserOrgs handles GET /users/{id}/organizations - retrieves organizations a user belongs to.
 func (h *MembershipHandler) GetUserOrgs(w http.ResponseWriter, r *http.Request) {
 	userIDParam := chi.URLParam(r, "id")
 

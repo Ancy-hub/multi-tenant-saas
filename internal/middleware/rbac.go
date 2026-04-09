@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// RequireRole checks if the user has one of the allowed roles in the organization.
 func RequireRole(service *services.MembershipService, allowedRoles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

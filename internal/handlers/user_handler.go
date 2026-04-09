@@ -9,21 +9,24 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// CreateUserRequest represents the request payload for creating a user.
 type CreateUserRequest struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
+// UserHandler handles HTTP requests related to users.
 type UserHandler struct {
 	service *services.UserService
 }
 
+// NewUserHandler creates a new UserHandler instance.
 func NewUserHandler(service *services.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
-// POST /users
+// CreateUser handles POST /users - creates a new user.
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var req CreateUserRequest
 
@@ -51,7 +54,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GET /users/{id}
+// GetUserByID handles GET /users/{id} - retrieves a user by ID.
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -69,6 +72,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	utils.WriteSuccess(w, http.StatusOK, user)
 }
 
+// GetAllUsers handles GET /users - retrieves all users.
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.service.GetAllUsers(r.Context())
 	if err != nil {
@@ -78,6 +82,7 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	utils.WriteSuccess(w, http.StatusOK, users)
 }
 
+// Login handles POST /login - authenticates a user and returns a JWT token.
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email    string `json:"email"`

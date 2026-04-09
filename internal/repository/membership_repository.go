@@ -9,23 +9,28 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// MembershipRepository handles database operations for organization memberships.
 type MembershipRepository struct {
+	// DB is the database connection pool.
 	DB *pgxpool.Pool
 }
 
-func NewMembershipRepository(db *pgxpool.Pool) *MembershipRepository{
+// NewMembershipRepository creates a new MembershipRepository instance.
+func NewMembershipRepository(db *pgxpool.Pool) *MembershipRepository {
 	return &MembershipRepository{DB: db}
 }
 
-func( r *MembershipRepository) Create(ctx context.Context, m models.Membership)error{
-	query:=`
+// Create inserts a new membership into the database.
+func (r *MembershipRepository) Create(ctx context.Context, m models.Membership) error {
+	query := `
 	INSERT INTO memberships (id,user_id, org_id, role)
 	VALUES ($1,$2,$3,$4)
 	`
-	_,err:=r.DB.Exec(ctx,query,m.ID,m.UserID,m.OrgID,m.Role)
+	_, err := r.DB.Exec(ctx, query, m.ID, m.UserID, m.OrgID, m.Role)
 	return err
 }
 
+// GetMembersByOrg retrieves members of an organization with pagination.
 func (r *MembershipRepository) GetMembersByOrg(ctx context.Context, orgID uuid.UUID, limit, offset int) ([]models.Member, error) {
 	query := `
 	SELECT u.id, u.name, u.email, m.role
@@ -61,6 +66,7 @@ func (r *MembershipRepository) GetMembersByOrg(ctx context.Context, orgID uuid.U
 	return members, nil
 }
 
+// RemoveMember deletes a membership from the database.
 func (r *MembershipRepository) RemoveMember(ctx context.Context, userID, orgID uuid.UUID) error {
 	query := `
 	DELETE FROM memberships
@@ -79,6 +85,7 @@ func (r *MembershipRepository) RemoveMember(ctx context.Context, userID, orgID u
 	return nil
 }
 
+// UpdateRole modifies the role of a membership.
 func (r *MembershipRepository) UpdateRole(ctx context.Context, userID, orgID uuid.UUID, role string) error {
 	query := `
 	UPDATE memberships
@@ -98,6 +105,7 @@ func (r *MembershipRepository) UpdateRole(ctx context.Context, userID, orgID uui
 	return nil
 }
 
+// GetOrgsByUser retrieves organizations a user belongs to.
 func (r *MembershipRepository) GetOrgsByUser(ctx context.Context, userID uuid.UUID) ([]models.UserOrg, error) {
 	query := `
 	SELECT o.id, o.name, m.role
@@ -126,6 +134,7 @@ func (r *MembershipRepository) GetOrgsByUser(ctx context.Context, userID uuid.UU
 	return orgs, nil
 }
 
+// GetUserRole retrieves the role of a user in a specific organization.
 func (r *MembershipRepository) GetUserRole(ctx context.Context, userID, orgID uuid.UUID) (string, error) {
 	query := `
 	SELECT role
