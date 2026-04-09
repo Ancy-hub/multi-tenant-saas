@@ -95,13 +95,40 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.service.Login(r.Context(), req.Email, req.Password)
+	token, refresh,  err := h.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
 	utils.WriteSuccess(w, http.StatusOK, map[string]string{
-		"token": token,
+		"access_token": token,
+		"refresh_token": refresh,
 	})
 }
+
+func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request){
+	var req struct{
+		RefreshToken string `json:"refresh_token"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil || req.RefreshToken == "" {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid request")
+		return
+	}
+	userID, err:=h.service.ValidateRefreshToken(r.Context(), req.RefreshToken)
+	if err!=nil{
+		utils.WriteError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	newAccess, err := utils.GenerateAccessToken(userID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, "Failed to generate token")
+		return
+	}
+	utils.WriteSuccess(w, http.StatusOK, map[string]string{
+		"access_token": newAccess,
+	})
+}
+
+

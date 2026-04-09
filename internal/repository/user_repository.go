@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/ancy-shibu/multi-tenant-saas/internal/models"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -96,4 +98,34 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (models.U
 	)
 
 	return user, err
+}
+
+func (r *UserRepository) StoreRefreshToken(ctx context.Context, userID uuid.UUID , token string)error{
+	query:=`
+	INSERT INTO refresh_tokens(id,user_id,token,expires_at)
+	VALUES($1,$2,$3,$4)
+	`
+	_,err:=r.DB.Exec(
+		ctx,
+		query,
+		uuid.New(),
+		userID,
+		token,
+		time.Now().Add(7*24*time.Hour),//7 days
+	)
+	return err
+}
+
+func(r *UserRepository) GetUserByRefreshToken(ctx context.Context, token string)(uuid.UUID, error){
+	query:=`
+	SELECT user_id
+	FROM refresh_tokens
+	WHERE token= $1 AND expires_At>NOW()
+	`
+	var userID uuid.UUID
+	err:=r.DB.QueryRow(ctx,query,token).Scan(&userID)
+	if err!=nil{
+		return uuid.Nil, err
+	}
+	return userID, nil
 }

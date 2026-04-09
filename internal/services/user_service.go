@@ -48,18 +48,32 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, error) {
 }
 
 // Login authenticates a user and returns a JWT token.
-func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {
+func (s *UserService) Login(ctx context.Context, email, password string) (string, string, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		return "", err
+		return "","",err
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		return "","", errors.New("invalid credentials")
 	}
-	token, err := utils.GenerateToken(user.ID)
+	accessToken, err := utils.GenerateAccessToken(user.ID)
 	if err != nil {
-		return "", err
+		return "","", err
 	}
-	return token, nil
+	refreshToken:= utils.GenerateRefreshToken()
+
+	err = s.repo.StoreRefreshToken(ctx,user.ID,refreshToken)
+	if err != nil {
+		return "", "",err
+	}
+	return accessToken, refreshToken, nil
+}
+
+func(s *UserService)ValidateRefreshToken(ctx context.Context,token string)(uuid.UUID,error){
+	userID, err:= s.repo.GetUserByRefreshToken(ctx,token)
+	if err!=nil{
+		return uuid.Nil, errors.New("invalid or expired refresh token")
+	}
+	return userID,nil
 }

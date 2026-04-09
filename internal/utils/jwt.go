@@ -23,7 +23,7 @@ type Claims struct {
 }
 
 // GenerateToken generates a new JWT token for the given user ID.
-func GenerateToken(userID uuid.UUID) (string, error) {
+func GenerateAccessToken(userID uuid.UUID) (string, error) {
 	if jwtSecret == nil {
 		return "", errors.New("jwt secret not set")
 	}
@@ -39,6 +39,10 @@ func GenerateToken(userID uuid.UUID) (string, error) {
 
 	//use the variable, not the setter
 	return token.SignedString(jwtSecret)
+}
+
+func GenerateRefreshToken() string{
+	return uuid.New().String()
 }
 
 // ParseToken parses and validates a JWT token string.
