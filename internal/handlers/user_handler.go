@@ -37,7 +37,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !utils.IsStrongPassword(req.Password) {
-		utils.WriteError(w, http.StatusBadRequest, "Weak password")
+		utils.WriteError(w, http.StatusBadRequest,
+			"Password must contain uppercase, lowercase, number, special char")
 		return
 	}
 	err = h.service.CreateUser(r.Context(), req.Name, req.Password, req.Email)

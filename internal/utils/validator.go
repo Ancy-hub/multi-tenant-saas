@@ -8,5 +8,21 @@ func IsValidEmail(email string) bool {
 }
 
 func IsStrongPassword(password string)bool{
-	return len(password)>=6
+	if len(password)<8{
+		return false
+	}
+	var hasUpper, hasLower, hasNumber, hasSpecial bool
+	for _,c:=range password{
+		switch{
+		case 'A'<=c && c<='Z':
+			hasUpper=true
+		case 'a'<=c && c<='z':
+			hasLower=true
+		case '0'<=c && c<='9':
+			hasNumber=true
+		default:
+			hasSpecial=true
+		}
+	}
+	return hasUpper && hasLower && hasNumber && hasSpecial
 }
