@@ -32,14 +32,20 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
-
+	if !utils.IsValidEmail(req.Email) {
+		utils.WriteError(w, http.StatusBadRequest, "Invalid email")
+		return
+	}
+	if !utils.IsStrongPassword(req.Password) {
+		utils.WriteError(w, http.StatusBadRequest, "Weak password")
+		return
+	}
 	err = h.service.CreateUser(r.Context(), req.Name, req.Password, req.Email)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	utils.WriteJSON(w, http.StatusCreated, map[string]string{
+	utils.WriteSuccess(w, http.StatusCreated, map[string]string{
 		"message": "user created",
 	})
 }
@@ -59,7 +65,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, user)
+	utils.WriteSuccess(w, http.StatusOK, user)
 }
 
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +74,7 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusNotFound, "Failed to fetch users")
 	}
 
-	utils.WriteJSON(w, http.StatusOK, users)
+	utils.WriteSuccess(w, http.StatusOK, users)
 }
 
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +95,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]string{
+	utils.WriteSuccess(w, http.StatusOK, map[string]string{
 		"token": token,
 	})
 }

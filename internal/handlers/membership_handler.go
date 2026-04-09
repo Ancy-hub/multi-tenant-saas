@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/ancy-shibu/multi-tenant-saas/internal/services"
@@ -55,7 +56,7 @@ func (h *MembershipHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, map[string]string{
+	utils.WriteSuccess(w, http.StatusCreated, map[string]string{
 		"message": "user added to org",
 	})
 }
@@ -68,14 +69,32 @@ func (h *MembershipHandler) GetMembersByOrg(w http.ResponseWriter, r *http.Reque
 		utils.WriteError(w, http.StatusBadRequest, "Invalid org_id")
 		return
 	}
+	//Pagination
+	limitStr := r.URL.Query().Get("limit")
+	offsetStr := r.URL.Query().Get("offset")
+	limit := 10
+	offset := 0
 
-	members, err := h.service.GetMembersByOrg(r.Context(), orgID)
+	if limitStr != "" {
+		fmt.Sscanf(limitStr, "%d", &limit)
+	}
+	if offsetStr != "" {
+		fmt.Sscanf(offsetStr, "%d", &offset)
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	members, err := h.service.GetMembersByOrg(r.Context(), orgID, limit, offset)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, err.Error())
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, members)
+	utils.WriteSuccess(w, http.StatusOK, members)
 }
 
 func (h *MembershipHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +119,7 @@ func (h *MembershipHandler) RemoveMember(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]string{
+	utils.WriteSuccess(w, http.StatusOK, map[string]string{
 		"message": "member removed",
 	})
 }
@@ -137,7 +156,7 @@ func (h *MembershipHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]string{
+	utils.WriteSuccess(w, http.StatusOK, map[string]string{
 		"message": "role updated",
 	})
 }
@@ -157,5 +176,5 @@ func (h *MembershipHandler) GetUserOrgs(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, orgs)
+	utils.WriteSuccess(w, http.StatusOK, orgs)
 }

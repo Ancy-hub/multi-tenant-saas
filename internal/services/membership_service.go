@@ -30,12 +30,12 @@ func (s *MembershipService) AddUserToOrg(ctx context.Context, userID uuid.UUID ,
 	return s.repo.Create(ctx, m)
 }
 
-func (s *MembershipService) GetMembersByOrg(ctx context.Context, orgID uuid.UUID) ([]models.Member, error) {
+func (s *MembershipService) GetMembersByOrg(ctx context.Context, orgID uuid.UUID, limit, offset int) ([]models.Member, error) {
 	if orgID == uuid.Nil { 
 		return nil, errors.New("invalid org id")
 	}
 
-	return s.repo.GetMembersByOrg(ctx, orgID)
+	return s.repo.GetMembersByOrg(ctx, orgID, limit, offset)
 }
 
 func (s *MembershipService) RemoveMember(ctx context.Context, userID, orgID uuid.UUID) error {

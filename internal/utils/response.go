@@ -4,14 +4,28 @@ import (
 	"encoding/json"
 	"net/http"
 )
-func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+
+type APIResponse struct {
+	Success bool        `json:"success"`
+	Data    any `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
 }
 
-func WriteError(w http.ResponseWriter, status int, message string) {
-	WriteJSON(w, status, map[string]string{
-		"error": message,
+func WriteSuccess(w http.ResponseWriter, status int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(APIResponse{
+		Success: true,
+		Data: data,
+	})
+}
+
+func WriteError(w http.ResponseWriter, status int, errMsg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	json.NewEncoder(w).Encode(APIResponse{
+		Success: false,
+		Error:   errMsg,
 	})
 }

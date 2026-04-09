@@ -35,7 +35,7 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, map[string]string{
+	utils.WriteSuccess(w, http.StatusCreated, map[string]string{
 		"message": "organization created",
 	})
 }
@@ -48,7 +48,7 @@ func (h *OrganizationHandler) GetOrganizations(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, orgs)
+	utils.WriteSuccess(w, http.StatusOK, orgs)
 }
 
 // GET /organizations/{id}
@@ -66,7 +66,7 @@ func (h *OrganizationHandler) GetOrganizationByID(w http.ResponseWriter, r *http
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, org)
+	utils.WriteSuccess(w, http.StatusOK, org)
 }
 
 // PUT /organizations/{id}
@@ -89,7 +89,7 @@ func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]string{
+	utils.WriteSuccess(w, http.StatusOK, map[string]string{
 		"message": "organization updated",
 	})
 }

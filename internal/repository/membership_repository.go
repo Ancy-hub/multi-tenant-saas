@@ -26,15 +26,16 @@ func( r *MembershipRepository) Create(ctx context.Context, m models.Membership)e
 	return err
 }
 
-func (r *MembershipRepository) GetMembersByOrg(ctx context.Context, orgID uuid.UUID) ([]models.Member, error) {
+func (r *MembershipRepository) GetMembersByOrg(ctx context.Context, orgID uuid.UUID, limit, offset int) ([]models.Member, error) {
 	query := `
 	SELECT u.id, u.name, u.email, m.role
 	FROM memberships m
 	JOIN users u ON m.user_id = u.id
 	WHERE m.org_id = $1
+	LIMIT $2 OFFSET $3
 	`
 
-	rows, err := r.DB.Query(ctx, query, orgID)
+	rows, err := r.DB.Query(ctx, query, orgID, limit, offset)
 	if err != nil {
 		return nil, err
 	}

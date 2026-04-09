@@ -56,7 +56,7 @@ func main() {
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
-
+		r.Use(middleware.LoggingMiddleware)
 		r.With(middleware.RequireRole(membershipService, "admin", "member")). // View (admin + member)
 			Get("/organizations/{id}/members", membershipHandler.GetMembersByOrg)
 
