@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// main initializes and starts the multi-tenant SaaS server.
 func main() {
 	//Load config
 	cfg := config.Load()
@@ -59,10 +60,10 @@ func main() {
 		r.Use(middleware.LoggingMiddleware)
 		r.Use(middleware.RateLimitMiddleware)
 		r.With(middleware.RequireRole(membershipService, "admin", "member")). // View (admin + member)
-			Get("/organizations/{id}/members", membershipHandler.GetMembersByOrg)
+											Get("/organizations/{id}/members", membershipHandler.GetMembersByOrg)
 
 		r.With(middleware.RequireRole(membershipService, "admin")). // Admin-only actions
-			Post("/organizations/{id}/members", membershipHandler.AddUser)
+										Post("/organizations/{id}/members", membershipHandler.AddUser)
 
 		r.With(middleware.RequireRole(membershipService, "admin")).
 			Delete("/organizations/{org_id}/members/{user_id}", membershipHandler.RemoveMember)

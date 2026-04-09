@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type Organization struct{
-	ID uuid.UUID
-	Name string
+type Organization struct {
+	ID        uuid.UUID
+	Name      string
 	CreatedAt time.Time
 	CreatedBy string
 }
