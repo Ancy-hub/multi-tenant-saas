@@ -38,6 +38,14 @@ func main() {
 	membershipService := services.NewMembershipService(membershipRepo)
 	membershipHandler := handlers.NewMembershipHandler(membershipService)
 
+	projectRepo := repository.NewProjectRepository(database)
+	projectService := services.NewProjectService(projectRepo)
+	projectHandler := handlers.NewProjectHandler(projectService)
+
+	taskRepo:= repository.NewTaskRepository(database)
+	taskService:=services.NewTaskService(taskRepo)
+	taskHandler:=handlers.NewTaskHandler(taskService)
+
 	r := chi.NewRouter()                                            //Router
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { //Health check
 		w.Write([]byte("OK"))
@@ -60,10 +68,10 @@ func main() {
 		r.Use(middleware.LoggingMiddleware)
 		r.Use(middleware.RateLimitMiddleware)
 		r.With(middleware.RequireRole(membershipService, "admin", "member")). // View (admin + member)
-											Get("/organizations/{id}/members", membershipHandler.GetMembersByOrg)
+			Get("/organizations/{id}/members", membershipHandler.GetMembersByOrg)
 
 		r.With(middleware.RequireRole(membershipService, "admin")). // Admin-only actions
-										Post("/organizations/{id}/members", membershipHandler.AddUser)
+			Post("/organizations/{id}/members", membershipHandler.AddUser)
 
 		r.With(middleware.RequireRole(membershipService, "admin")).
 			Delete("/organizations/{org_id}/members/{user_id}", membershipHandler.RemoveMember)
@@ -71,6 +79,38 @@ func main() {
 		r.With(middleware.RequireRole(membershipService, "admin")).
 			Patch("/organizations/{org_id}/members/{user_id}", membershipHandler.UpdateRole)
 	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware)
+
+		//View projects (admin + member)
+		r.With(middleware.RequireRole(membershipService, "admin", "member")).
+			Get("/organizations/{id}/projects", projectHandler.GetProjects)
+
+		//Admin only
+		r.With(middleware.RequireRole(membershipService, "admin")).
+			Post("/organizations/{id}/projects", projectHandler.CreateProject)
+
+		r.With(middleware.RequireRole(membershipService, "admin")).
+			Delete("/projects/{project_id}", projectHandler.DeleteProject)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware)
+
+		r.With(middleware.RequireRole(membershipService, "admin", "member")).
+			Get("/projects/{project_id}/tasks", taskHandler.GetTasks)
+
+		r.With(middleware.RequireRole(membershipService, "admin")).
+			Post("/projects/{project_id}/tasks", taskHandler.CreateTask)
+
+		r.With(middleware.RequireRole(membershipService, "admin")).
+			Patch("/tasks/{task_id}", taskHandler.UpdateTask)
+
+		r.With(middleware.RequireRole(membershipService, "admin")).
+			Delete("/tasks/{task_id}", taskHandler.DeleteTask)
+	})
+
 	r.Get("/users/{id}/organizations", membershipHandler.GetUserOrgs)
 
 	log.Println("Server running on port", cfg.Port)
