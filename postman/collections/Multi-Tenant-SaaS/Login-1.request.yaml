@@ -1,14 +1,12 @@
 $kind: http-request
 name: Login
-url: http://localhost:8081/login
+url: '{{baseUrl}}/login'
 method: POST
 body:
   type: json
-  content: "{\r
-
-    \  \"email\": \"Ancy@2002\",\r
-
-    \  \"password\":\"ancy@example.com\"\r
-
-    }"
+  content: |-
+    {
+      "email": "{{userEmail}}",
+      "password": "{{userPassword}}"
+    }
 order: 4503588477038124

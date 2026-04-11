@@ -1,0 +1,5 @@
+$kind: http-request
+name: GetOrganizations
+url: http://localhost:8081/organizations
+method: GET
+order: 1775744965469

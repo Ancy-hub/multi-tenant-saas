@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Organization Members'
+url: '{{baseUrl}}/organizations/{{organizationId}}/members'
+method: GET
+order: 4291255550579060

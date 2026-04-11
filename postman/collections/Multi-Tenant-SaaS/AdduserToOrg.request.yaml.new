@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Add User to Organization'
+url: '{{baseUrl}}/organizations/{{organizationId}}/members'
+method: POST
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "user_id": "{{userId}}",
+      "role": "{{memberRole}}"
+    }
+order: 2458295061213817

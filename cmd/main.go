@@ -16,9 +16,11 @@ import (
 
 // main initializes and starts the multi-tenant SaaS server.
 func main() {
-	//Load config
+	// Load configuration
 	cfg := config.Load()
 	utils.SetJWTSecret(cfg.JWTSecret)
+
+	// Initialize database connection
 	database, err := db.NewDB()
 	if err != nil {
 		log.Fatal("Failed to connect to db:", err)
@@ -26,47 +28,57 @@ func main() {
 	defer database.Close()
 	log.Println("Database connected")
 
-	orgRepo := repository.NewOrganizationRepository(database) //Initialize repository
-	orgService := services.NewOrganizationService(orgRepo)    //Initialize service
-	orgHandler := handlers.NewOrganizationHandler(orgService) //Initialize handler
-
+	// Initialize repositories
+	orgRepo := repository.NewOrganizationRepository(database)
 	userRepo := repository.NewUserRepository(database)
-	userService := services.NewUserService(userRepo)
-	userHandler := handlers.NewUserHandler(userService)
-
 	membershipRepo := repository.NewMembershipRepository(database)
-	membershipService := services.NewMembershipService(membershipRepo)
-	membershipHandler := handlers.NewMembershipHandler(membershipService)
-
 	projectRepo := repository.NewProjectRepository(database)
+	taskRepo := repository.NewTaskRepository(database)
+
+	// Initialize services
+	orgService := services.NewOrganizationService(orgRepo)
+	userService := services.NewUserService(userRepo)
+	membershipService := services.NewMembershipService(membershipRepo)
 	projectService := services.NewProjectService(projectRepo)
+	taskService := services.NewTaskService(taskRepo)
+
+	// Initialize handlers
+	orgHandler := handlers.NewOrganizationHandler(orgService)
+	userHandler := handlers.NewUserHandler(userService)
+	membershipHandler := handlers.NewMembershipHandler(membershipService)
 	projectHandler := handlers.NewProjectHandler(projectService)
+	taskHandler := handlers.NewTaskHandler(taskService)
 
-	taskRepo:= repository.NewTaskRepository(database)
-	taskService:=services.NewTaskService(taskRepo)
-	taskHandler:=handlers.NewTaskHandler(taskService)
+	// Initialize router
+	r := chi.NewRouter()
 
-	r := chi.NewRouter()                                            //Router
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { //Health check
+	// Health check endpoint (no auth required)
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 
+	// Authentication endpoint (no auth required)
 	r.Post("/login", userHandler.Login)
 
-	//Organization routes
-	r.Post("/organizations", orgHandler.CreateOrganization)
-	r.Get("/organizations", orgHandler.GetOrganizations)
-	r.Get("/organizations/{id}", orgHandler.GetOrganizationByID)
-	r.Patch("/organizations/{id}", orgHandler.UpdateOrganization)
-	//User routes
-	r.Post("/users", userHandler.CreateUser)
-	r.Get("/users", userHandler.GetAllUsers)
-	r.Get("/users/{id}", userHandler.GetUserByID)
-
+	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
 		r.Use(middleware.LoggingMiddleware)
 		r.Use(middleware.RateLimitMiddleware)
+
+		// User routes
+		r.Post("/users", userHandler.CreateUser)
+		r.Get("/users", userHandler.GetAllUsers)
+		r.Get("/users/{id}", userHandler.GetUserByID)
+		r.Get("/users/{id}/organizations", membershipHandler.GetUserOrgs)
+
+		// Organization routes
+		r.Post("/organizations", orgHandler.CreateOrganization)
+		r.Get("/organizations", orgHandler.GetOrganizations)
+		r.Get("/organizations/{id}", orgHandler.GetOrganizationByID)
+		r.Patch("/organizations/{id}", orgHandler.UpdateOrganization)
+
+		// Membership routes (organization members)
 		r.With(middleware.RequireRole(membershipService, "admin", "member")). // View (admin + member)
 			Get("/organizations/{id}/members", membershipHandler.GetMembersByOrg)
 
@@ -78,26 +90,18 @@ func main() {
 
 		r.With(middleware.RequireRole(membershipService, "admin")).
 			Patch("/organizations/{org_id}/members/{user_id}", membershipHandler.UpdateRole)
-	})
 
-	r.Group(func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware)
-
-		//View projects (admin + member)
-		r.With(middleware.RequireRole(membershipService, "admin", "member")).
+		// Project routes
+		r.With(middleware.RequireRole(membershipService, "admin", "member")). // View projects (admin + member)
 			Get("/organizations/{id}/projects", projectHandler.GetProjects)
 
-		//Admin only
-		r.With(middleware.RequireRole(membershipService, "admin")).
+		r.With(middleware.RequireRole(membershipService, "admin")). // Admin only
 			Post("/organizations/{id}/projects", projectHandler.CreateProject)
 
 		r.With(middleware.RequireRole(membershipService, "admin")).
 			Delete("/projects/{project_id}", projectHandler.DeleteProject)
-	})
 
-	r.Group(func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware)
-
+		// Task routes
 		r.With(middleware.RequireRole(membershipService, "admin", "member")).
 			Get("/projects/{project_id}/tasks", taskHandler.GetTasks)
 
@@ -111,8 +115,7 @@ func main() {
 			Delete("/tasks/{task_id}", taskHandler.DeleteTask)
 	})
 
-	r.Get("/users/{id}/organizations", membershipHandler.GetUserOrgs)
-
+	// Start server
 	log.Println("Server running on port", cfg.Port)
 	err = http.ListenAndServe(":"+cfg.Port, r)
 	if err != nil {

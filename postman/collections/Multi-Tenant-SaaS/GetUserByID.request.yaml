@@ -1,5 +1,0 @@
-$kind: http-request
-name: GetUserByID
-url: http://localhost:8081/users/508b6d2f-6bab-4da8-855e-3af2cd36b64c
-method: GET
-order: 4503236492227233

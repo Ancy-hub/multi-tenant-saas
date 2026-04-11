@@ -1,7 +1,0 @@
-$kind: http-request
-name: GetMembersByOrg
-url: "
-  http://localhost:8081/organizations/bed60989-a54e-4886-b190-802576478efc/memb\
-  ers"
-method: GET
-order: 4503578061358883

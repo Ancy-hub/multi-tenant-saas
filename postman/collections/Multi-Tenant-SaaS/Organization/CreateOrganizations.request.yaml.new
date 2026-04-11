@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Create Organization'
+url: '{{baseUrl}}/organizations'
+method: POST
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "{{organizationName}}"
+    }
+order: 3427620538054703

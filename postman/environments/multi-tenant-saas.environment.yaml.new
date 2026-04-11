@@ -1,0 +1,42 @@
+name: multi-tenant-saas
+values:
+  - key: baseUrl
+    value: 'http://localhost:8081'
+    enabled: true
+    type: default
+  - key: organizationId
+    value: 'bed60989-a54e-4886-b190-802576478efc'
+    enabled: true
+    type: default
+  - key: organizationShortId
+    value: 'bed60989'
+    enabled: true
+    type: default
+  - key: userId
+    value: '508b6d2f-6bab-4da8-855e-3af2cd36b64c'
+    enabled: true
+    type: default
+  - key: userName
+    value: 'Ancy'
+    enabled: true
+    type: default
+  - key: userEmail
+    value: 'ancy@example.com'
+    enabled: true
+    type: default
+  - key: userPassword
+    value: 'Ancy@2002'
+    enabled: true
+    type: default
+  - key: organizationName
+    value: 'shwab-connect'
+    enabled: true
+    type: default
+  - key: updatedOrganizationName
+    value: 'edited-name1.1'
+    enabled: true
+    type: default
+  - key: memberRole
+    value: 'admin'
+    enabled: true
+    type: default

@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Organization by ID'
+url: '{{baseUrl}}/organizations/{{organizationShortId}}'
+method: GET
+order: 4017969418854096

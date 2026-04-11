@@ -1,5 +1,0 @@
-$kind: http-request
-name: GetAllUsers
-url: http://localhost:8081/users
-method: GET
-order: 4503170097977747

@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Update Organization'
+url: '{{baseUrl}}/organizations/{{organizationId}}'
+method: PATCH
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "{{updatedOrganizationName}}"
+    }
+order: 4139139296661299

@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get All Users'
+url: '{{baseUrl}}/users'
+method: GET
+order: 3180932694353980
