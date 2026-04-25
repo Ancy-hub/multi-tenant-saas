@@ -8,16 +8,18 @@ import (
 	"github.com/ancy-shibu/multi-tenant-saas/internal/models"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/services"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
+	"github.com/ancy-shibu/multi-tenant-saas/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
 type TaskHandler struct {
-	service *services.TaskService
+	service    *services.TaskService
+	dispatcher worker.Dispatcher
 }
 
-func NewTaskHandler(service *services.TaskService)*TaskHandler{
-	return &TaskHandler{service: service}
+func NewTaskHandler(service *services.TaskService, dispatcher worker.Dispatcher) *TaskHandler {
+	return &TaskHandler{service: service, dispatcher: dispatcher}
 }
 
 func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +45,14 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	// Dispatch asynchronous background job
+	if h.dispatcher != nil {
+		h.dispatcher.Dispatch(&worker.TaskCreatedJob{
+			TaskTitle:  req.Title,
+			AssignedTo: uuid.Nil, // For now, unassigned initially
+		})
 	}
 
 	utils.WriteSuccess(w, http.StatusCreated, "task created")

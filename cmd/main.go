@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/ancy-shibu/multi-tenant-saas/internal/repository"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/services"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
+	"github.com/ancy-shibu/multi-tenant-saas/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -59,12 +61,17 @@ func main() {
 	projectService := services.NewProjectService(projectRepo)
 	taskService := services.NewTaskService(taskRepo)
 
+	// Initialize and start background worker pool
+	workerPool := worker.NewPool(5, 100) // 5 concurrent workers, queue size of 100
+	workerPool.Start(context.Background())
+	defer workerPool.Stop()
+
 	// Initialize handlers
-	orgHandler := handlers.NewOrganizationHandler(orgService)
 	userHandler := handlers.NewUserHandler(userService)
+	orgHandler := handlers.NewOrganizationHandler(orgService)
 	membershipHandler := handlers.NewMembershipHandler(membershipService)
 	projectHandler := handlers.NewProjectHandler(projectService)
-	taskHandler := handlers.NewTaskHandler(taskService)
+	taskHandler := handlers.NewTaskHandler(taskService, workerPool)
 
 	// Initialize router
 	r := chi.NewRouter()
