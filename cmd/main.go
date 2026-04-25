@@ -12,6 +12,9 @@ import (
 	"github.com/ancy-shibu/multi-tenant-saas/internal/services"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 // main initializes and starts the multi-tenant SaaS server.
@@ -27,6 +30,20 @@ func main() {
 	}
 	defer database.Close()
 	log.Println("Database connected")
+
+	// Run Database Migrations
+	m, err := migrate.New(
+		"file://db/migrations",
+		"postgres://postgres:root@localhost:8080/postgres?sslmode=disable",
+	)
+	if err != nil {
+		log.Fatal("Failed to initialize migrations:", err)
+	}
+	
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("Failed to run migrations:", err)
+	}
+	log.Println("Database migrations checked/applied successfully")
 
 	// Initialize repositories
 	orgRepo := repository.NewOrganizationRepository(database)
