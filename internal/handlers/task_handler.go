@@ -62,6 +62,23 @@ func (h *TaskHandler) GetTasks(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteSuccess(w, http.StatusOK, tasks)
 }
+
+func (h *TaskHandler) GetTasksByOrg(w http.ResponseWriter, r *http.Request) {
+	orgIDParam := chi.URLParam(r, "id")
+	orgID, err := uuid.Parse(orgIDParam)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, "invalid organization id")
+		return
+	}
+
+	tasks, err := h.service.GetTasksByOrganization(r.Context(), orgID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteSuccess(w, http.StatusOK, tasks)
+}
 func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskIDParam := chi.URLParam(r, "task_id")
 	taskID, _ := uuid.Parse(taskIDParam)

@@ -18,6 +18,9 @@ type APIResponse struct {
 // WriteSuccess writes a successful JSON response to the HTTP response writer.
 func WriteSuccess(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(APIResponse{
 		Success: true,
@@ -28,6 +31,9 @@ func WriteSuccess(w http.ResponseWriter, status int, data interface{}) {
 // WriteError writes an error JSON response to the HTTP response writer.
 func WriteError(w http.ResponseWriter, status int, errMsg string) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 	w.WriteHeader(status)
 
 	json.NewEncoder(w).Encode(APIResponse{

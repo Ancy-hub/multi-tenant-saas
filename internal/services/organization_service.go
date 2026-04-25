@@ -20,18 +20,19 @@ func NewOrganizationService(repo *repository.OrganizationRepository) *Organizati
 }
 
 // CreateOrganization creates a new organization.
-func (s *OrganizationService) CreateOrganization(ctx context.Context, name string) error {
+func (s *OrganizationService) CreateOrganization(ctx context.Context, name string, description string) error {
 	org := models.Organization{
-		ID:   uuid.New(),
-		Name: name,
+		ID:          uuid.New(),
+		Name:        name,
+		Description: description,
 	}
 
 	return s.repo.Create(ctx, org)
 }
 
-// GetOrganizations retrieves all organizations.
-func (s *OrganizationService) GetOrganizations(ctx context.Context) ([]models.Organization, error) {
-	return s.repo.GetAll(ctx)
+// GetOrganizations retrieves organizations for a specific user.
+func (s *OrganizationService) GetOrganizations(ctx context.Context, userID uuid.UUID) ([]models.Organization, error) {
+	return s.repo.GetByUserID(ctx, userID)
 }
 
 // GetOrganizationByID retrieves an organization by its ID.

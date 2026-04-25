@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ancy-shibu/multi-tenant-saas/internal/models"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -21,21 +22,23 @@ func NewOrganizationRepository(db *pgxpool.Pool) *OrganizationRepository {
 // Create inserts a new organization into the database.
 func (r *OrganizationRepository) Create(ctx context.Context, org models.Organization) error {
 	query := `
-	INSERT INTO organizations (id, name)
-	Values($1,$2)
+	INSERT INTO organizations (id, name, description)
+	Values($1,$2,$3)
 	`
-	_, err := r.DB.Exec(ctx, query, org.ID, org.Name)
+	_, err := r.DB.Exec(ctx, query, org.ID, org.Name, org.Description)
 	return err
 }
 
-// GetAll retrieves all organizations from the database.
-func (r *OrganizationRepository) GetAll(ctx context.Context) ([]models.Organization, error) {
+// GetByUserID retrieves all organizations a user has access to.
+func (r *OrganizationRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.Organization, error) {
 	query := `
-	SELECT id, name, created_at
-	From organizations
-	Order BY created_at desc
+	SELECT DISTINCT o.id, o.name, COALESCE(o.description, ''), o.created_at
+	FROM organizations o
+	LEFT JOIN memberships m ON o.id = m.org_id
+	WHERE o.created_by = $1 OR m.user_id = $1
+	ORDER BY o.created_at DESC
 	`
-	rows, err := r.DB.Query(ctx, query)
+	rows, err := r.DB.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +50,7 @@ func (r *OrganizationRepository) GetAll(ctx context.Context) ([]models.Organizat
 		err := rows.Scan(
 			&org.ID,
 			&org.Name,
+			&org.Description,
 			&org.CreatedAt,
 		)
 		if err != nil {
@@ -60,7 +64,7 @@ func (r *OrganizationRepository) GetAll(ctx context.Context) ([]models.Organizat
 // GetByID retrieves an organization by its ID.
 func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*models.Organization, error) {
 	query := `
-	SELECT id, name, created_at
+	SELECT id, name, COALESCE(description, ''), created_at
 	FROM organizations
 	WHERE id=$1
 	`
@@ -68,6 +72,7 @@ func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*model
 	err := r.DB.QueryRow(ctx, query, id).Scan(
 		&org.ID,
 		&org.Name,
+		&org.Description,
 		&org.CreatedAt,
 	)
 

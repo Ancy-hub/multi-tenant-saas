@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
+	"github.com/ancy-shibu/multi-tenant-saas/internal/middleware"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/services"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/utils"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // OrganizationHandler handles HTTP requests related to organizations.
@@ -23,7 +26,8 @@ func NewOrganizationHandler(service *services.OrganizationService) *Organization
 // CreateOrganization handles POST /organizations - creates a new organization.
 func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name string `json:"name"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -32,8 +36,9 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err = h.service.CreateOrganization(r.Context(), req.Name)
+	err = h.service.CreateOrganization(r.Context(), req.Name, req.Description)
 	if err != nil {
+		log.Printf("CreateOrganization error: %v", err)
 		utils.WriteError(w, http.StatusInternalServerError, "Failed to create organization")
 		return
 	}
@@ -45,8 +50,15 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 
 // GetOrganizations handles GET /organizations - retrieves all organizations.
 func (h *OrganizationHandler) GetOrganizations(w http.ResponseWriter, r *http.Request) {
-	orgs, err := h.service.GetOrganizations(r.Context())
+	userID, ok := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
+	if !ok {
+		utils.WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	orgs, err := h.service.GetOrganizations(r.Context(), userID)
 	if err != nil {
+		log.Printf("GetOrganizations error: %v", err)
 		utils.WriteError(w, http.StatusInternalServerError, "Failed to fetch organizations")
 		return
 	}

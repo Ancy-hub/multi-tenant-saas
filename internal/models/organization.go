@@ -7,8 +7,9 @@ import (
 )
 
 type Organization struct {
-	ID        uuid.UUID
-	Name      string
-	CreatedAt time.Time
-	CreatedBy string
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	CreatedBy   string    `json:"created_by"`
 }

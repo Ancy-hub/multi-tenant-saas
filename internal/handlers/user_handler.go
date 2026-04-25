@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/ancy-shibu/multi-tenant-saas/internal/services"
@@ -44,13 +45,21 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 			"Password must contain uppercase, lowercase, number, special char")
 		return
 	}
-	err = h.service.CreateUser(r.Context(), req.Name, req.Password, req.Email)
+	user, token, refresh, err := h.service.CreateUser(r.Context(), req.Name, req.Password, req.Email)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	utils.WriteSuccess(w, http.StatusCreated, map[string]string{
-		"message": "user created",
+	utils.WriteSuccess(w, http.StatusCreated, map[string]interface{}{
+		"message":       "user created",
+		"access_token":  token,
+		"refresh_token": refresh,
+		"user": map[string]interface{}{
+			"id":         user.ID,
+			"name":       user.Name,
+			"email":      user.Email,
+			"created_at": user.CreatedAt,
+		},
 	})
 }
 
@@ -84,6 +93,7 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 // Login handles POST /login - authenticates a user and returns a JWT token.
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Login request received from %s", r.RemoteAddr)
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -91,24 +101,34 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil || req.Email == "" || req.Password == "" {
+		log.Printf("Login validation failed: %v", err)
 		utils.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
-	token, refresh,  err := h.service.Login(r.Context(), req.Email, req.Password)
+	log.Printf("Login attempt for email: %s", req.Email)
+	token, refresh, user, err := h.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
+		log.Printf("Login failed for %s: %v", req.Email, err)
 		utils.WriteError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, map[string]string{
-		"access_token": token,
+	log.Printf("Login successful for %s", req.Email)
+	utils.WriteSuccess(w, http.StatusOK, map[string]interface{}{
+		"access_token":  token,
 		"refresh_token": refresh,
+		"user": map[string]interface{}{
+			"id":         user.ID,
+			"name":       user.Name,
+			"email":      user.Email,
+			"created_at": user.CreatedAt,
+		},
 	})
 }
 
-func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request){
-	var req struct{
+func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req struct {
 		RefreshToken string `json:"refresh_token"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -116,8 +136,8 @@ func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request){
 		utils.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
-	userID, err:=h.service.ValidateRefreshToken(r.Context(), req.RefreshToken)
-	if err!=nil{
+	userID, err := h.service.ValidateRefreshToken(r.Context(), req.RefreshToken)
+	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
@@ -130,5 +150,3 @@ func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request){
 		"access_token": newAccess,
 	})
 }
-
-

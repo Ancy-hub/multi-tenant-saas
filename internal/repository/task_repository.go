@@ -37,7 +37,7 @@ func (r *TaskRepository) Create(ctx context.Context, t models.Task) error {
 
 func (r *TaskRepository) GetByProject(ctx context.Context, projectID uuid.UUID, limit, offset int) ([]models.Task, error) {
 	query := `
-	SELECT id, project_id, title, description, status, assigned_to, created_by, created_at
+	SELECT id, project_id, title, COALESCE(description, ''), status, assigned_to, created_by, created_at
 	FROM tasks
 	WHERE project_id = $1 AND deleted_at IS NULL
 	ORDER BY created_at DESC
@@ -45,6 +45,44 @@ func (r *TaskRepository) GetByProject(ctx context.Context, projectID uuid.UUID, 
 	`
 
 	rows, err := r.DB.Query(ctx, query, projectID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tasks []models.Task
+
+	for rows.Next() {
+		var t models.Task
+		err := rows.Scan(
+			&t.ID,
+			&t.ProjectID,
+			&t.Title,
+			&t.Description,
+			&t.Status,
+			&t.AssignedTo,
+			&t.CreatedBy,
+			&t.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, t)
+	}
+
+	return tasks, nil
+}
+
+func (r *TaskRepository) GetByOrganization(ctx context.Context, orgID uuid.UUID) ([]models.Task, error) {
+	query := `
+	SELECT t.id, t.project_id, t.title, COALESCE(t.description, ''), t.status, t.assigned_to, t.created_by, t.created_at
+	FROM tasks t
+	INNER JOIN projects p ON t.project_id = p.id
+	WHERE p.org_id = $1 AND t.deleted_at IS NULL AND p.deleted_at IS NULL
+	ORDER BY t.created_at DESC
+	`
+
+	rows, err := r.DB.Query(ctx, query, orgID)
 	if err != nil {
 		return nil, err
 	}

@@ -28,9 +28,14 @@ func (s *ProjectService) CreateProject(ctx context.Context, name, description st
 
 	return s.repo.Create(ctx, p)
 }
-// GET PROJECTS
-func (s *ProjectService) GetProjectsByOrg(ctx context.Context, orgID uuid.UUID, limit, offset int) ([]models.Project, error) {
+// GetProjects retrieves projects for an organization.
+func (s *ProjectService) GetProjects(ctx context.Context, orgID uuid.UUID, limit, offset int) ([]models.Project, error) {
 	return s.repo.GetByOrg(ctx, orgID, limit, offset)
+}
+
+// GetProjectByID retrieves a single project by its ID.
+func (s *ProjectService) GetProjectByID(ctx context.Context, projectID uuid.UUID) (*models.Project, error) {
+	return s.repo.GetByID(ctx, projectID)
 }
 
 // DELETE PROJECT

@@ -33,6 +33,10 @@ func (s *TaskService) GetTasks(ctx context.Context, projectID uuid.UUID, limit, 
 	return s.repo.GetByProject(ctx, projectID, limit, offset)
 }
 
+func (s *TaskService) GetTasksByOrganization(ctx context.Context, orgID uuid.UUID) ([]models.Task, error) {
+	return s.repo.GetByOrganization(ctx, orgID)
+}
+
 func (s *TaskService) UpdateTask(ctx context.Context, t models.Task) error {
 	return s.repo.Update(ctx, t)
 }

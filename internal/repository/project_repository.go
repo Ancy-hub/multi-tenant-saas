@@ -36,7 +36,7 @@ func (r *ProjectRepository) Create(ctx context.Context, p models.Project) error 
 // GET PROJECTS BY ORG (with pagination)
 func (r *ProjectRepository) GetByOrg(ctx context.Context, orgID uuid.UUID, limit, offset int) ([]models.Project, error) {
 	query := `
-	SELECT id, name, description, org_id, created_by, created_at
+	SELECT id, name, COALESCE(description, ''), org_id, created_by, created_at
 	FROM projects
 	WHERE org_id = $1 AND deleted_at IS NULL
 	ORDER BY created_at DESC
@@ -68,6 +68,29 @@ func (r *ProjectRepository) GetByOrg(ctx context.Context, orgID uuid.UUID, limit
 	}
 
 	return projects, nil
+}
+
+// GetByID retrieves a single project by its ID.
+func (r *ProjectRepository) GetByID(ctx context.Context, projectID uuid.UUID) (*models.Project, error) {
+	query := `
+	SELECT id, name, COALESCE(description, ''), org_id, created_by, created_at
+	FROM projects
+	WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	var p models.Project
+	err := r.DB.QueryRow(ctx, query, projectID).Scan(
+		&p.ID,
+		&p.Name,
+		&p.Description,
+		&p.OrgID,
+		&p.CreatedBy,
+		&p.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
 }
 // DELETE PROJECT
 func (r *ProjectRepository) Delete(ctx context.Context, projectID uuid.UUID) error {
