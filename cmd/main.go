@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/ancy-shibu/multi-tenant-saas/internal/config"
 	"github.com/ancy-shibu/multi-tenant-saas/internal/db"
@@ -17,9 +18,18 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "github.com/ancy-shibu/multi-tenant-saas/docs"
 )
 
-// main initializes and starts the multi-tenant SaaS server.
+// @title Multi-Tenant SaaS API
+// @version 1.0
+// @description This is the backend API for a multi-tenant SaaS application.
+// @host localhost:8081
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	// Load configuration
 	cfg := config.Load()
@@ -34,9 +44,14 @@ func main() {
 	log.Println("Database connected")
 
 	// Run Database Migrations
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL = "postgres://postgres:root@localhost:8080/postgres?sslmode=disable"
+	}
+	
 	m, err := migrate.New(
 		"file://db/migrations",
-		"postgres://postgres:root@localhost:8080/postgres?sslmode=disable",
+		dbURL,
 	)
 	if err != nil {
 		log.Fatal("Failed to initialize migrations:", err)
@@ -80,6 +95,9 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
+
+	// Swagger documentation endpoint
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	// Authentication endpoint (no auth required)
 	r.Post("/login", userHandler.Login)

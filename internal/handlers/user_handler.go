@@ -92,6 +92,22 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // Login handles POST /login - authenticates a user and returns a JWT token.
+// LoginRequest represents the login credentials.
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// Login authenticates a user and returns a JWT token.
+// @Summary User Login
+// @Description Authenticates a user with email and password
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login credentials"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Router /login [post]
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Login request received from %s", r.RemoteAddr)
 	var req struct {

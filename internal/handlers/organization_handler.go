@@ -49,6 +49,14 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 }
 
 // GetOrganizations handles GET /organizations - retrieves all organizations.
+// @Summary Get User Organizations
+// @Description Retrieves a list of organizations the authenticated user belongs to
+// @Tags organizations
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} models.Organization
+// @Failure 401 {object} map[string]string
+// @Router /organizations [get]
 func (h *OrganizationHandler) GetOrganizations(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
 	if !ok {

@@ -22,6 +22,24 @@ func NewTaskHandler(service *services.TaskService, dispatcher worker.Dispatcher)
 	return &TaskHandler{service: service, dispatcher: dispatcher}
 }
 
+// CreateTaskRequest represents the task creation payload.
+type CreateTaskRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+// CreateTask creates a new task in a project.
+// @Summary Create Task
+// @Description Creates a new task within a specified project
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param project_id path string true "Project ID"
+// @Param request body CreateTaskRequest true "Task details"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /projects/{project_id}/tasks [post]
 func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	projectIDParam := chi.URLParam(r, "project_id")
 
